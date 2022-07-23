@@ -1,0 +1,151 @@
+# Here are some queries created during my SQL analysis:
+
+- Creating an employees table using a primary key.
+
+CREATE TABLE employees
+(
+employee_id VARCHAR(30) NOT NULL,
+name VARCHAR(50),
+contact_number VARCHAR(30),
+designation_id INTEGER,
+last_update TIMESTAMP NOT NULL DEFAULT now(),
+CONSTRAINT employee_pkey PRIMARY KEY (employee_id)
+);
+
+- Finding average rental rate.
+
+SELECT 
+AVG (rental_rate) AS "Average rental rate",
+rating AS "Rating"
+FROM film
+GROUP BY rating
+ORDER BY rating;
+
+- Finding minimum and maximum rental duration for each film rating category.
+
+SELECT 
+MIN (rental_duration) AS "Minimum rental duration",
+MAX (rental_duration) AS "Maximum rental duration",
+rating AS "Rating"
+FROM film 
+GROUP BY rating
+ORDER BY rating;
+
+ - Descriptive statistics of the numeric columns in the film table.
+
+SELECT 
+MIN(rental_rate) AS min_rental_rate,
+MAX(rental_rate) AS max_rental_rate,
+AVG(rental_rate) AS avg_renatal_rate,
+MIN(rental_duration) AS min_rental_duration,
+MAX(rental_duration) AS max_rental_duration,
+AVG(rental_duration) AS avg_rental_duration,
+MIN(replacement_cost) AS min_replacement_cost,
+MAX(replacement_cost) AS max_replacement_cost,
+AVG(replacement_cost) AS avg_replacement_cost,
+MIN(length) AS min_length,
+MAX(length) AS max_length,
+AVG(length) AS avg_length
+FROM film;
+
+ - Mode values for non-numerical columns for film table.
+
+SELECT
+mode() WITHIN GROUP (ORDER BY rating)
+AS rating_value,
+mode() WITHIN GROUP (ORDER BY special_features)
+AS Feature_value,
+mode() WITHIN GROUP (ORDER BY release_year)
+AS year_value,
+mode() WITHIN GROUP (ORDER BY title)
+AS title_value,
+COUNT(*) AS count_rows
+FROM film;
+
+- Search for duplicate values in the film table
+
+SELECT title,
+       release_year,
+       language_id,
+       rental_duration,
+       COUNT(*)
+FROM film
+GROUP BY title,
+         release_year,
+         language_id,
+         rental_duration
+HAVING COUNT(*) >1;
+
+ - Find the top 10 countries for Rockbuster in terms of number of customers. 
+
+SELECT d.country,
+COUNT(A.customer_id) AS "customer_total"
+FROM customer A
+INNER JOIN address B ON A.address_id = B.address_id
+INNER JOIN city C ON B.city_id = C.city_id
+INNER JOIN country D ON C.country_id = D.country_id
+GROUP BY country
+ORDER BY customer_total DESC
+LIMIT 10;
+
+ - Find the top 10 cities in the within the countries outputted in the previous query.
+
+SELECT C.city,
+COUNT(A.customer_id) AS "customer_total"
+FROM customer A
+INNER JOIN address B ON A.address_id = B.address_id
+INNER JOIN city C ON B.city_id = C.city_id
+INNER JOIN country D ON C.country_id = D.country_id
+WHERE country IN
+('India', 'China', 'United States', 'Japan', 'Mexico', 'Brazil', 'Russian Federation', 'Philippines', 'Turkey', 'Indonesia')
+GROUP BY city
+ORDER BY customer_total DESC
+LIMIT 10;
+
+ - Find the top 5 customers in the above top ten cities who have paid the highest total amounts to Rockbuster.
+
+SELECT A.customer_id,
+A.first_name,
+A.last_name,
+C.city,
+D.country,
+SUM(E.amount) AS "total_amount"
+FROM customer A
+INNER JOIN address B ON A.address_id = B.address_id
+INNER JOIN city C ON B.city_id = C.city_id
+INNER JOIN country D ON C.country_id = D.country_id
+INNER JOIN payment E ON A.customer_id = E.customer_id
+WHERE city IN ('Aurora',' Shimoga', 'Aparecida de Goinia', 'Emeishan', 'Pontianak', 'Tarsus', 'Atlixco', 'Zalantun', 'Rio Claro', 'Tokat')
+GROUP BY A.customer_id, C.city, D.country
+ORDER BY total_amount DESC
+LIMIT 5;
+
+- CTE to find out where customers are based generally and also where the top 5 customers are based. 
+
+WITH top_5_customers_cte (customer_id, first_name, last_name, country, city, total_amount_paid) 
+AS (SELECT A.customer_id,
+	A.first_name, 
+	A.last_name, 
+	C.city, D.country, 
+	SUM(E.amount) AS total_amount_paid
+	FROM customer A 
+	INNER JOIN address B ON A. address_id = B.address_id 
+	INNER JOIN city C ON B.city_id = c.city_id 
+	INNER JOIN country D ON C.country_id = D.country_id 
+	INNER JOIN payment E ON A.customer_id = E.customer_id 
+	WHERE city IN('Aurora', 'Tokat', 'Tarsus', 'Atlixco', 'Emeishan', 'Pontianak', 'Shimoga', 'Aparecida de Goinia', 'Zalantun', 'Taguig') 
+	GROUP BY A.customer_id, c.city, D.country 
+	ORDER BY total_amount_paid DESC
+	LIMIT 5) 
+SELECT A.country,
+		COUNT (DISTINCT D. customer_id) AS all_customer_count,
+		COUNT (DISTINCT A.country) AS top_customer_count
+FROM country A 
+INNER JOIN city B ON A.country_id=B.country_id
+INNER JOIN address C ON B.city_id=C.city_id
+INNER JOIN customer D ON C. address_id=D.address_id
+LEFT JOIN top_5_customers_cte ON A.country=top_5_customers_cte.country
+GROUP BY A.country
+ORDER BY all_customer_count DESC 
+LIMIT 5
+
