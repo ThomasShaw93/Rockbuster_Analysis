@@ -21,7 +21,9 @@ CareerFoundry provided a dataset containing the following tables:
 - Inventory
 - Category
 - Language
+
 The data can be found [here](http://www.postgresqltutorial.com/wp-content/uploads/2019/05/dvdrental.zip).
 # Additional Resources
 As well as SQL queries, I have provided a Data Dictionary and my final presentation to Rockbuster.
+
 My Tableau visualisations can be found [here](https://public.tableau.com/app/profile/thomas.shaw/viz/RockbusterVisualisations/CustomerPieChart).
